@@ -1,12 +1,11 @@
-require "addressable/uri"
-require "socket"
-require "openssl"
+require 'addressable/uri'
+require 'socket'
+require 'openssl'
 
 class CarrierPigeon
-
   def initialize(options={})
     [:host, :port, :nick, :channel].each do |option|
-      raise "You must provide an IRC #{option}" unless options.has_key?(option)
+      raise "You must provide an IRC #{option}" unless options.key?(option)
     end
     tcp_socket = TCPSocket.new(options[:host], options[:port])
     if options[:ssl]
@@ -39,25 +38,26 @@ class CarrierPigeon
   end
 
   def message(channel, message, notice = false)
-    command = notice ? "NOTICE" : "PRIVMSG"
+    command = notice ? 'NOTICE' : 'PRIVMSG'
     sendln "#{command} #{channel} :#{message}"
   end
 
   def die
-    sendln "QUIT :quit"
+    sendln 'QUIT :quit'
     @socket.gets until @socket.eof?
     @socket.close
   end
 
   def self.send(options={})
-    raise "You must supply a valid IRC URI" unless options[:uri]
-    raise "You must supply a message" unless options[:message]
+    raise 'You must supply a valid IRC URI' unless options[:uri]
+    raise 'You must supply a message' unless options[:message]
     uri = Addressable::URI.parse(options[:uri])
     options[:host] = uri.host
     options[:port] = uri.port || 6667
     options[:nick] = uri.user
     options[:password] = uri.password
     options[:channel] = "#" + uri.fragment
+    options[:message].tr!("\n", ' ')
     if options[:nickserv_password]
       options[:nickserv_command] ||=
         "PRIVMSG NICKSERV :IDENTIFY #{options[:nickserv_password]}"
@@ -72,5 +72,4 @@ class CarrierPigeon
   def sendln(cmd)
     @socket.puts(cmd)
   end
-
 end
